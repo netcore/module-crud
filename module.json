@@ -1,0 +1,16 @@
+{
+    "name": "Crud",
+    "alias": "crud",
+    "description": "",
+    "keywords": [],
+    "active": 1,
+    "order": 0,
+    "providers": [
+        "Modules\\Crud\\Providers\\CrudServiceProvider"
+    ],
+    "aliases": {},
+    "files": [
+        "start.php"
+    ],
+    "requires": []
+}
