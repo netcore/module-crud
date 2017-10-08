@@ -14,8 +14,7 @@
         }
     },
     "require": {
-        "php": ">=5.5",
-        "netcore/translations": "^1.0"
+        "php": ">=5.5"
     },
     "minimum-stability": "dev"
 }
