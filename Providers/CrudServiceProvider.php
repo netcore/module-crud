@@ -4,6 +4,7 @@ namespace Modules\Crud\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Factory;
+use Modules\Crud\ViewComposers\NavTabsComposer;
 
 class CrudServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,7 @@ class CrudServiceProvider extends ServiceProvider
         //$this->registerTranslations();
         $this->registerConfig();
         $this->registerViews();
+        $this->registerViewComposers();
         //$this->registerFactories();
     }
 
@@ -96,6 +98,20 @@ class CrudServiceProvider extends ServiceProvider
     {
         if (! app()->environment('production')) {
             app(Factory::class)->load(__DIR__ . '/Database/factories');
+        }
+    }
+
+    /**
+     *
+     */
+    public function registerViewComposers()
+    {
+        $map = [
+            'crud::nav_tabs' => NavTabsComposer::class
+        ];
+
+        foreach ($map as $view => $composerClass) {
+            view()->composer($view, $composerClass);
         }
     }
 
