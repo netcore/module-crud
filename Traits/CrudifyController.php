@@ -3,10 +3,13 @@
 namespace Modules\Crud\Traits;
 
 use Modules\Crud\Http\Requests\CrudRequest;
+use Illuminate\Database\Eloquent\Model;
 
 trait CrudifyController
 {
     /**
+     * Get model instance
+     *
      * @return mixed
      */
     public function getModel()
@@ -15,109 +18,117 @@ trait CrudifyController
     }
 
     /**
+     * Find single row
+     *
+     * @param $value
+     * @return mixed
+     */
+    public function findRow($value)
+    {
+        return $this->getModel()->findOrFail($value);
+    }
+
+    /**
      * Display a listing of the resource.
-     * @param CrudRequest $request
      *
      * @return \Illuminate\View\View
      */
-    public function index(CrudRequest $request)
+    public function index()
     {
-        $model = $this->model;
-        $rows  = $model->all();
-
-        return $this->view('crud::index', compact('model', 'rows'));
+        return $this->view('crud::index', [
+            'model' => $this->getModel(),
+            'rows' => $this->getModel()->all()
+        ]);
     }
 
     /**
      * Show the form for creating a new resource.
-     * @return Response
+     *
+     * @return \Illuminate\View\View
      */
-    public function create(CrudRequest $request)
+    public function create()
     {
-        $model = $this->model;
-
-        return $this->view('crud::create',compact('model'));
+        return $this->view('crud::create', [
+            'model' => $this->getModel()
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
-     * @param  Request $request
+     * @param  CrudRequest $request
+     *
      * @return Response
      */
     public function store(CrudRequest $request)
     {
-        $this->model->create(
-            $request->all()
-        );
+        $this->getModel()->create($request->all());
 
-        return redirect()->back()->withSuccess( $this->model->getClassName() . ' created successfully.');
+        return back()->withSuccess($this->getModel()->getClassName() . ' created successfully.');
     }
 
     /**
      * Show the specified resource.
-     * @return Response
+     *
+     * @param $value
+     * @return \Illuminate\View\View
      */
-    public function show(CrudRequest $request, $id)
+    public function show($value)
     {
-        $model = $this->model->findOrFail($id);
-
-        return $this->view('crud::show',compact('model'));
+        return $this->view('crud::show', [
+            'model' => $this->findRow($value)
+        ]);
     }
 
     /**
      * Show the form for editing the specified resource.
-     * @return Response
+     *
+     * @param $value
+     * @return \Illuminate\View\View
      */
-    public function edit(CrudRequest $request, $id)
+    public function edit($value)
     {
-        $model = $this->model->findOrFail($id);
-
-        return $this->view('crud::edit',compact('model'));
+        return $this->view('crud::edit', [
+            'model' => $this->findRow($value)
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
-     * @param  Request $request
-     * @return Response
+     * @param $value
+     * @param  CrudRequest $request
      */
-    public function update(CrudRequest $request, $id)
+    public function update(CrudRequest $request, $value)
     {
-        $model = $this->model->findOrFail($id);
-
         //at moment this is cheating
+        $model = $this->findRow($value);
         $model->update(
             $request->except('password')
         );
 
         //still cheating
         if( $request->get('password') ){
-            $model->password = bcrypt( $request->get('password') );
-            $model->save();
+            $this->getModel()->password = bcrypt( $request->get('password') );
+            $this->getModel()->save();
         }
 
-        return redirect()->back()->withSuccess( $model->getClassName() . ' saved successfully.');
+        return redirect()->back()->withSuccess($this->getModel()->getClassName() . ' saved successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
+     *
      * @return Response
      */
     public function destroy()
     {
-    }
 
-    /**
-     *
-     */
-    public function accessDenied()
-    {
-        return abort(403, 'No permissions');
     }
 
     /**
      * @param      $name
-     * @param null $variables
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @param $variables
+     *
+     * @return \Illuminate\View\View
      */
     public function view($name, $variables = false)
     {

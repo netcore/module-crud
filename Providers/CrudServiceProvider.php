@@ -22,21 +22,9 @@ class CrudServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //$this->registerTranslations();
         $this->registerConfig();
         $this->registerViews();
         $this->registerViewComposers();
-        //$this->registerFactories();
-    }
-
-    /**
-     * Register the service provider.
-     *
-     * @return void
-     */
-    public function register()
-    {
-        //
     }
 
     /**

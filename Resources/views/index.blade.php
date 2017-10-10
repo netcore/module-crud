@@ -10,7 +10,7 @@
         <table class="table table-bordered" id="datatables">
             <thead>
             <tr>
-                @foreach( $model->crud['index']['fields'] as $field => $type )
+                @foreach($model->buildFields() as $field => $type )
 
                     @if( $type == 'textarea' )
 
@@ -25,19 +25,17 @@
 
             @foreach( $rows as $row )
                 <tr>
-                    @foreach( $model->crud['index']['fields'] as $field => $type )
+                    @foreach( $model->buildFields() as $field => $type )
                         @if( $type == 'textarea' )
 
                         @else
-                        <td>{{ $row->{$field} }}</td>
+                            <td>{{ $row->{$field} }}</td>
                         @endif
                     @endforeach
 
                     <td>
-                        @foreach($model->crud as $crud => $values)
-                            @if( in_array($crud, ['show','edit','destroy'] ) )
-                                <a href="{{crudify_route($crud,$row->id)}}" class="btn btn-default">{{$crud}}</a>
-                            @endif
+                        @foreach(['show','edit','destroy'] as $method)
+                            <a href="{{ crudify_route($method, $row->id)}}" class="btn btn-default">{{ $method }}</a>
                         @endforeach
                     </td>
                 </tr>

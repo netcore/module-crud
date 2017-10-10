@@ -1,47 +1,18 @@
 <?php
+
 namespace Modules\Crud\Traits;
 
-trait CrudifyModel{
+use Doctrine\DBAL\Types\StringType;
 
-    /*
-     * @TODO: 1. no show skata, tabulas, varētu automātiski izvākt textarea laukus, jeb arī tiem automātiski piemērot strlimit
-     * */
+trait CrudifyModel {
 
-    private static $crudDefault = [
-        'destroy' => true,
-        'index'   => 'fillable',
-        'show'    => 'fillable',
-        'create'  => 'fillable',
-        'edit'    => 'create',
+    protected $typeMap = [
+        'string' => 'text',
+        'text' => 'textarea',
+        'tinyint' => 'select'
     ];
 
-    //@TODO: 2. magic fields varētu pabeigt
-    private static $magicFields = [
-        'password' => [
-            'fields' => [
-                'password'              => 'password',
-                'password_confirmation' => 'password'
-            ],
-            'validation' => [
-                'password' => 'confirmed'
-            ]
-        ],
-        'email' => [
-            'fields' => [
-                'email' => 'email'
-            ],
-            'validation' => [
-                'email' => 'email'
-            ]
-        ],
-    ];
-
-    private static $morphCrudMethods = [
-        'store'  => 'create',
-        'update' => 'edit'
-    ];
-
-    public static $columnsWithType;
+    // TODO: Implement email, password as magic methods
 
     /**
      * @return string
@@ -52,201 +23,93 @@ trait CrudifyModel{
     }
 
     /**
-     * @return mixed
+     * @return array
      */
-    public function getTableColumns()
+    public function buildFields()
     {
-        if( self::$columnsWithType ){
-            return self::$columnsWithType;
+        $fields = [];
+
+        foreach($this->readDatabaseSchema() as $field => $schema) {
+            $fields[$field] = $this->typeMap[$schema->getType()->getName()] ?? 'text';
         }
-        $builder = $this->getConnection()->getSchemaBuilder();
-        $columns = $builder->getColumnListing($this->getTable());
 
-        $columnsWithType = collect($columns)->mapWithKeys(function ($item, $key) use ($builder) {
-            $key = $builder->getColumnType($this->getTable(), $item);
-            return [$item => $key];
-        });
-
-        self::$columnsWithType = $columnsWithType->toArray();
-
-        return self::$columnsWithType;
+        return $fields;
     }
 
     /**
-     * @param $method
+     * Get array of validation rules
+     *
      * @return array
      */
-    public function getValidationFields($method)
+    public function getValidationRules()
     {
-        if( in_array( $method, array_keys( self::$morphCrudMethods ) ) ){
-            $method = self::$morphCrudMethods[$method];
-        }
-
-        $fields = $this->crud[$method];
-
-        return isset( $fields['validation'] ) ? $fields['validation'] : [];
+        return $this->buildValidation($this->readDatabaseSchema());
     }
 
     /**
-     * @param $method
-     * @return array
+     * Read the database schema and return fillable fields as Column instances
+     *
+     * @return Collection
      */
-    public function getCrudFields($method)
+    protected function readDatabaseSchema()
     {
-        if( in_array( $method, array_keys( self::$morphCrudMethods ) ) ){
-            $method = self::$morphCrudMethods[$method];
-        }
+        $schema = \DB::getDoctrineSchemaManager();
 
-        $fields = $this->crud[$method];
-
-        return $fields['fields'];
+        return collect($schema->listTableColumns($this->getTable()))
+            ->reject(function ($instance, $column) {
+               return ! in_array($column, $this->fillable) || in_array($column, $this->hidden);
+            });
     }
 
     /**
+     * Build validation rules
+     *
+     * @param $columns
      * @return array
      */
-    public function getCrudAttribute()
+    protected function buildValidation($columns)
     {
-        $views = self::$crudDefault;
+        $rules = [];
 
-        if( isset( self::$crud ) ){
-            $views = array_merge(
-                $views, self::$crud
-            );
-        }
+        foreach($columns as $column => $columnInstance) {
+            $rules[$column] = [];
 
-        $map = $this->buildCrudMap(
-            $views
-        );
+            $rules[$column][] = $columnInstance->getNotnull() ? 'required' : 'nullable';
 
-        return $map;
-    }
-
-    /**
-     * @param $views
-     * @return array
-     */
-    public function buildCrudMap($methods)
-    {
-        $map = [
-            'destroy' => $methods['destroy']
-        ];
-
-        unset($methods['destroy']);
-
-        foreach( $methods as $view => $fieldContainer ){
-            $map[$view] = $this->resolveFieldContainer($methods, $view, $fieldContainer);
-        }
-
-        return $map;
-    }
-
-    /**
-     * @param $views
-     * @param $view
-     * @param $fieldContainer
-     * @return array
-     */
-    public function resolveFieldContainer( $methods, $view, $fieldContainer )
-    {
-        //field is presented as array, we can assume desired configuration is passed
-        if( is_array( $fieldContainer ) ){
-            return $this->buildFields( $fieldContainer );
-        }
-
-        //field is a string, so we check against other fields and resolve it from them
-        if( $aliasView = $fieldContainer AND in_array($aliasView, array_keys( self::$crudDefault ) ) ){
-            return $this->resolveFieldContainer($methods, $aliasView, $methods[$aliasView]); //this is stupid. for now will do.
-        }
-
-        //as we cant resolve view, it will be populated from
-        return $this->buildFields(
-            $this->fieldsFromFillable(
-                $removeHidden = (in_array($view,['create','edit']) ? false : true)
-            )
-        );
-    }
-
-    /**
-     * @param $fields
-     * @return array
-     */
-    public function buildFields($fields)
-    {
-        if( !is_array($fields) ){
-            return $fields;
-        }
-
-        $parsed = [];
-
-        foreach( $fields as $field => $fieldData ){
-            if( is_numeric( $field ) ){
-                $field = $fieldData;
-            }
-
-            preg_match_all('/(.*)\[(.*)\]/', $fieldData, $matches, PREG_SET_ORDER, 0);
-
-            if( $matches ){
-                $parsed['fields'][$field]     = ($matches[0][1] ? $matches[0][1] : 'text');
-                $parsed['validation'][$field] = $matches[0][2];
-            } else {
-
-                //@TODO: refactor this
-                $tableColumns = $this->getTableColumns();
-
-                $parsed['fields'][$field] = 'text';
-
-                if( strpos($field, 'is_') !== false ){
-                    $parsed['fields'][$field] = 'boolean';
-                }
-
-                if( isset( $tableColumns[$field] ) AND $dbFieldType = $tableColumns[$field] ){
-
-                    $dbToHtml = [
-                        'string'   => 'text',
-                        'text'     => 'textarea',
-                        'datetime' => 'datetime'
-                    ];
-
-                    if( isset( $dbToHtml[ $tableColumns[$field] ] ) ){
-                        $parsed['fields'][$field] = $dbToHtml[ $tableColumns[$field] ];
-                    }
-                }
-
-                $parsed['validation'][$field] = 'required';
-
-                if( isset( self::$magicFields[$field] ) ){
-                    //autoapply from magic fields
-
-                    if( isset( self::$magicFields[$field]['fields'] ) ){
-                        foreach( self::$magicFields[$field]['fields'] as $magicField => $magicFieldData ){
-                            $parsed['fields'][$magicField] = $magicFieldData;
-                        }
-                    }
-
-                    if( isset( self::$magicFields[$field]['validation'] ) ){
-                        foreach( self::$magicFields[$field]['validation'] as $magicField => $magicFieldData ){
-                            $parsed['validation'][$magicField] = $magicFieldData;
-                        }
-                    }
-                }
+            if ($columnInstance->getType() instanceof StringType) {
+                $rules[$column][] = 'max:' . $columnInstance->getLength();
             }
         }
 
-        return $parsed;
+        return array_merge_recursive($rules, $this->buildUniqueRuleset());
     }
 
     /**
+     * Read unique indexes from table and apply unique rule
+     *
      * @return array
      */
-    public function fieldsFromFillable($removeHidden = true)
+    protected function buildUniqueRuleset()
     {
-        $fillable = $this->fillable;
+        $rules = [];
+        $indexList = \DB::select(
+            \DB::raw("SHOW INDEXES FROM " . $this->getTable() . " WHERE NOT Non_unique and Key_Name <> 'PRIMARY'")
+        );
 
-        if( $removeHidden AND isset( $this->hidden ) ){
-            $fillable = array_diff($this->fillable, $this->hidden);
+        foreach ($indexList as $index) {
+            if(in_array($index->Column_name, $this->fillable)) {
+                $rule = 'unique:' . $this->getTable();
+
+                // If the model does exist then append the route key name
+                if ($this->exists()) {
+                    $rule .= ',' . $index->Column_name . ',' . $this->{$this->getRouteKeyName()};
+                }
+
+                $rules[$index->Column_name][] = $rule;
+            }
         }
 
-        return $fillable;
+        return $rules;
     }
+
 }
