@@ -1,0 +1,1 @@
+{{ Form::select($field,[1 => 'yes', 2 => 'no'], null, $attributes) }}

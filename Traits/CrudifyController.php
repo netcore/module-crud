@@ -1,9 +1,8 @@
 <?php
+
 namespace Modules\Crud\Traits;
 
-use Illuminate\Http\Request;
 use Modules\Crud\Http\Requests\CrudRequest;
-use Illuminate\Database\Eloquent\Model;
 
 trait CrudifyController
 {
@@ -17,7 +16,9 @@ trait CrudifyController
 
     /**
      * Display a listing of the resource.
-     * @return Response
+     * @param CrudRequest $request
+     *
+     * @return \Illuminate\View\View
      */
     public function index(CrudRequest $request)
     {

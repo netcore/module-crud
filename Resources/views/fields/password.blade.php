@@ -1,0 +1,1 @@
+{{ Form::password($field, $attributes) }}

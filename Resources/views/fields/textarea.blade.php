@@ -1,0 +1,1 @@
+{{ Form::textarea($field, null, $attributes + ['class' => 'form-control ritch-textarea']) }}
