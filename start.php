@@ -36,12 +36,3 @@ function crudify_route($to, $parameters = null){
 
     return route(implode('.', $segments));
 }
-
-function crudify_back(){
-
-    $previous = url()->previous();
-
-    if( $previous  == url()->current() ){
-        //return crudify_route($current, '')
-    }
-}
