@@ -72,7 +72,7 @@ trait CrudifyModel {
      *
      * @return array
      */
-    public function buildFields()
+    public function getFields()
     {
         $fields = [];
 

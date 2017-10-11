@@ -15,7 +15,7 @@
         <input name="_method" type="hidden" value="PUT">
 
         <div class="p-x-1">
-            @include('crud::_fields', ['fields' => $model->buildFields()])
+            @include('crud::_fields', ['fields' => $model->getFields()])
 
             <button type="submit" class="btn btn-lg btn-success m-t-3 pull-xs-right">Save</button>
 

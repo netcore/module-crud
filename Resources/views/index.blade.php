@@ -10,12 +10,12 @@
         <table class="table table-bordered" id="datatables">
             <thead>
             <tr>
-                @foreach($model->buildFields() as $field => $type )
+                @foreach($model->getFields() as $field => $type )
 
                     @if( $type == 'textarea' )
 
                     @else
-                        <th>{{title_case(str_replace('_', ' ', $field))}}</th>
+                        <th>{{ title_case(str_replace('_', ' ', $field))}}</th>
                     @endif
                 @endforeach
                 <th>Actions</th>
@@ -25,7 +25,7 @@
 
             @foreach( $rows as $row )
                 <tr>
-                    @foreach( $model->buildFields() as $field => $type )
+                    @foreach( $model->getFields() as $field => $type )
                         @if( $type == 'textarea' )
 
                         @else
