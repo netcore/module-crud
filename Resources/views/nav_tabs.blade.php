@@ -1,6 +1,6 @@
 
 <!-- Nav tabs -->
-<ul class="nav nav-tabs clean" role="tablist">
+<ul class="nav nav-tabs language-tabs clean" role="tablist">
     @foreach($languages as $language)
         <li
             role="presentation"
