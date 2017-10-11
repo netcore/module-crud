@@ -34,9 +34,20 @@
                     @endforeach
 
                     <td>
-                        @foreach(['show','edit','destroy'] as $method)
-                            <a href="{{ crudify_route($method, $row->id)}}" class="btn btn-default">{{ $method }}</a>
-                        @endforeach
+                        <a href="{{ crudify_route('show', $row) }}" class="btn btn-xs btn-default">
+                            <i class="fa fa-eye"></i>
+                        </a>
+
+                        <a href="{{ crudify_route('edit', $row) }}" class="btn btn-xs btn-primary">
+                            <i class="fa fa-pencil"></i>
+                        </a>
+
+                        {!! Form::open(['url' => crudify_route('destroy', $row->id), 'style' => 'display: inline-block']) !!}
+                            {{ method_field('DELETE') }}
+                            <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Are you sure?');">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        {!! Form::close() !!}
                     </td>
                 </tr>
             @endforeach
@@ -49,16 +60,13 @@
 
 @section('scripts')
     <script>
-        $(function() {
-            var table = $('#datatables').dataTable({
+        (function() {
+            $('#datatables').dataTable({
                 columnDefs: [
-                    { orderable: false, targets: -1 }
+                    {orderable: false, targets: -1}
                 ]
-
             });
-
-            $('#datatables_wrapper .table-caption').text('Some header text');
             $('#datatables_wrapper .dataTables_filter input').attr('placeholder', 'Search...');
-        });
+        })();
     </script>
 @endsection

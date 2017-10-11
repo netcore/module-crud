@@ -39,6 +39,19 @@ trait CRUDModel
     ];
 
     /**
+     * To avoid empty password to be hashed, we hash it in model
+     *
+     * @param $password
+     */
+    public function setPasswordAttribute($password)
+    {
+        if (! empty($password))
+        {
+            $this->attributes['password'] = bcrypt($password);
+        }
+    }
+
+    /**
      * @return string
      */
     public function getClassName()
@@ -187,18 +200,4 @@ trait CRUDModel
         return ! in_array($column, $this->fillable) ||
             (in_array($column, $this->hidden) && ! in_array($column, $this->getMagicFields()));
     }
-
-    /**
-     * To avoid empty password to be hashed, we hash it in model
-     *
-     * @param $password
-     */
-    public function setPasswordAttribute($password)
-    {
-        if (! empty($password))
-        {
-            $this->attributes['password'] = bcrypt($password);
-        }
-    }
-
 }

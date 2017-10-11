@@ -95,6 +95,19 @@ trait CRUDController
     }
 
     /**
+     * Delete CRUD record.
+     *
+     * @param $value
+     */
+    public function destroy($value)
+    {
+        $model = $this->getModel()->findOrFail($value);
+        $model->delete();
+
+        return back()->withSuccess($this->getModel()->getClassName() . ' deleted successfully.');
+    }
+
+    /**
      * @param      $name
      * @param $variables
      *
