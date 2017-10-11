@@ -7,8 +7,7 @@
                     'id' => $field,
                     'class' =>
                     'form-control',
-                    'autocomplete' =>
-                    'off'
+                    'autocomplete' => 'off'
                 ]
             ])
 

@@ -3,7 +3,6 @@
 namespace Modules\Crud\Traits;
 
 use Doctrine\DBAL\Types\StringType;
-use MongoDB\BSON\Timestamp;
 
 trait CrudifyModel {
 
@@ -80,6 +79,11 @@ trait CrudifyModel {
             // Determine if field is in a magic field.
             if (in_array($field, $this->getMagicFields())) {
                 $fields[$field] = $this->getMagicFields()[$field] ?? 'text';
+
+                // If the magic field is "password" then we append always confirmation
+                if ($field == 'password') {
+                    $fields['password_confirmation'] = 'password';
+                }
             } else {
                 $fields[$field] = $this->typeMap[$schema->getType()->getName()] ?? 'text';
             }
@@ -99,7 +103,7 @@ trait CrudifyModel {
 
         return collect($schema->listTableColumns($this->getTable()))
             ->reject(function ($instance, $column) {
-               return ! in_array($column, $this->fillable) || in_array($column, $this->hidden);
+               return $this->rejectColumn($column);
             });
     }
 
@@ -149,7 +153,7 @@ trait CrudifyModel {
             if(in_array($index->Column_name, $this->fillable)) {
                 $rule = 'unique:' . $this->getTable();
 
-                // If the model does exist then append the route key name
+                // If the model does exist then append the route key name (usually: id)
                 if ($this->exists()) {
                     $rule .= ',' . $index->Column_name . ',' . $this->{$this->getRouteKeyName()};
                 }
@@ -170,6 +174,31 @@ trait CrudifyModel {
     protected function getMagicFieldValidation($field)
     {
         return $this->magicFieldValidation[$field] ?? [];
+    }
+
+    /**
+     * Determine if column must be rejected from output
+     *
+     * @param $column
+     * @return bool
+     */
+    protected function rejectColumn($column)
+    {
+        return ! in_array($column, $this->fillable) ||
+            (in_array($column, $this->hidden) && ! in_array($column, $this->getMagicFields()));
+    }
+
+    /**
+     * To avoid empty password to be hashed, we hash it in model
+     *
+     * @param $password
+     */
+    public function setPasswordAttribute($password)
+    {
+        if (! empty($password))
+        {
+            $this->attributes['password'] = bcrypt($password);
+        }
     }
 
 }

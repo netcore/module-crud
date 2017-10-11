@@ -99,29 +99,10 @@ trait CrudifyController
      */
     public function update(CrudRequest $request, $value)
     {
-        //at moment this is cheating
         $model = $this->findRow($value);
-        $model->update(
-            $request->except('password')
-        );
+        $model->update($request->all());
 
-        //still cheating
-        if( $request->get('password') ){
-            $this->getModel()->password = bcrypt( $request->get('password') );
-            $this->getModel()->save();
-        }
-
-        return redirect()->back()->withSuccess($this->getModel()->getClassName() . ' saved successfully.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @return Response
-     */
-    public function destroy()
-    {
-
+        return back()->withSuccess($this->getModel()->getClassName() . ' saved successfully.');
     }
 
     /**

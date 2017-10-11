@@ -8,27 +8,26 @@
     @include('admin::_partials._messages')
 
     {!! Form::open(['url' => crudify_route('store')]) !!}
-
         {{ csrf_field() }}
-
         <div class="p-x-1">
-            @include('crud::_fields', ['fields' => $model->crud['create']['fields']])
+            @include('crud::_fields', ['fields' => $model->getFields()])
 
-            <button type="submit" class="btn btn-lg btn-success m-t-3 pull-xs-right">Create new {{$model->getClassName()}}</button>
-
-            {{-- @TODO: back poga nepārāk labi strādā uz edit --}}
-            <a href="{{url()->previous()}}" class="btn btn-lg btn-default m-t-3 m-r-1 pull-xs-right">Back</a>
-
-            {{--<a href="javascript:;" class=" text-muted p-t-4">Deactivate resource</a>--}}
+            <button type="submit" class="btn btn-lg btn-success m-t-3 pull-xs-right">
+                Create new {{ $model->getClassName() }}
+            </button>
+            <a href="{{ url()->previous() }}" class="btn btn-lg btn-default m-t-3 m-r-1 pull-xs-right">Back</a>
         </div>
     {!! Form::close() !!}
 @endsection
 
 @section('scripts')
     <script>
-        $('.datepicker').datepicker();
         $(function() {
-            $('.ritch-textarea').summernote({
+            $('.datepicker').datepicker({
+                format: 'yyyy-mm-dd'
+            });
+
+            $('textarea').summernote({
                 height: 200,
                 toolbar: [
                     ['parastyle', ['style']],
