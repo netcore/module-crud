@@ -7,15 +7,12 @@
 @section('crud')
 @isset($rows)
     <div class="table-primary">
-        <table class="table table-bordered" id="datatables">
+        <table class="table table-bordered datatable">
             <thead>
                 <tr>
                     @foreach($model->hideFields(['password'])->getFields() as $field => $type )
-
-                        @if( $type == 'textarea' )
-
-                        @else
-                            <th>{{ title_case(str_replace('_', ' ', $field))}}</th>
+                        @if($type != 'textarea' )
+                            <th>{{ title_case(str_replace('_', ' ', $field)) }}</th>
                         @endif
                     @endforeach
                     <th>Actions</th>
@@ -23,16 +20,13 @@
             </thead>
             <tbody>
 
-            @foreach( $rows as $row )
+            @foreach($rows as $row)
                 <tr>
-                    @foreach($model->hideFields(['password'])->getFields() as $field => $type )
-                        @if( $type == 'textarea' )
-
-                        @else
+                    @foreach($model->hideFields(['password'])->getFields() as $field => $type)
+                        @if($type != 'textarea')
                             <td>{{ $row->{$field} }}</td>
                         @endif
                     @endforeach
-
                     <td>
                         <a href="{{ crud_route('show', $row) }}" class="btn btn-xs btn-default">
                             <i class="fa fa-eye"></i>
@@ -61,12 +55,12 @@
 @section('scripts')
     <script>
         (function() {
-            $('#datatables').dataTable({
+            $('.datatable').dataTable({
                 columnDefs: [
                     {orderable: false, targets: -1}
                 ]
             });
-            $('#datatables_wrapper .dataTables_filter input').attr('placeholder', 'Search...');
+            $('.dataTables_wrapper .dataTables_filter input').attr('placeholder', 'Search...');
         })();
     </script>
 @endsection
