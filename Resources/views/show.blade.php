@@ -7,7 +7,7 @@
 @section('crud')
     <div class="p-x-1">
         {!! Form::model($model) !!}
-        @include('crud::_fields', ['fields' => $model->getFields()])
+        @include('crud::_fields', ['fields' => $model->hideFields(['password'])->getFields()])
             <a href="{{ crud_route('edit', $model->id) }}" class="btn btn-lg btn-primary m-t-3 pull-xs-right">
                 Edit
             </a>

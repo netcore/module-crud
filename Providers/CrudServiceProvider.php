@@ -24,7 +24,6 @@ class CrudServiceProvider extends ServiceProvider
     {
         $this->registerConfig();
         $this->registerViews();
-        $this->registerViewComposers();
     }
 
     /**
@@ -63,22 +62,6 @@ class CrudServiceProvider extends ServiceProvider
     }
 
     /**
-     * Register translations.
-     *
-     * @return void
-     */
-    public function registerTranslations()
-    {
-        $langPath = resource_path('lang/modules/crud');
-
-        if (is_dir($langPath)) {
-            $this->loadTranslationsFrom($langPath, 'crud');
-        } else {
-            $this->loadTranslationsFrom(__DIR__ .'/../Resources/lang', 'crud');
-        }
-    }
-
-    /**
      * Register an additional directory of factories.
      * @source https://github.com/sebastiaanluca/laravel-resource-flow/blob/develop/src/Modules/ModuleServiceProvider.php#L66
      */
@@ -86,20 +69,6 @@ class CrudServiceProvider extends ServiceProvider
     {
         if (! app()->environment('production')) {
             app(Factory::class)->load(__DIR__ . '/Database/factories');
-        }
-    }
-
-    /**
-     *
-     */
-    public function registerViewComposers()
-    {
-        $map = [
-            'crud::nav_tabs' => NavTabsComposer::class
-        ];
-
-        foreach ($map as $view => $composerClass) {
-            view()->composer($view, $composerClass);
         }
     }
 
