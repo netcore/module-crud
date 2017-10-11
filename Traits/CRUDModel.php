@@ -7,6 +7,13 @@ use Doctrine\DBAL\Types\StringType;
 trait CRUDModel
 {
     /**
+     * List of fields that must be hidden
+     *
+     * @var array
+     */
+    public $hiddenFields = [];
+
+    /**
      * Data type mapping against form generator
      *
      * @var array
@@ -45,10 +52,22 @@ trait CRUDModel
      */
     public function setPasswordAttribute($password)
     {
-        if (! empty($password))
-        {
+        if (! empty($password)) {
             $this->attributes['password'] = bcrypt($password);
         }
+    }
+
+    /**
+     * Set fields that must be hidden from "getFields"
+     *
+     * @param array $fields
+     * @return $this
+     */
+    public function hideFields($fields = [])
+    {
+        $this->hiddenFields = $fields;
+
+        return $this;
     }
 
     /**
@@ -116,7 +135,7 @@ trait CRUDModel
 
         return collect($schema->listTableColumns($this->getTable()))
             ->reject(function ($instance, $column) {
-               return $this->rejectColumn($column);
+                return $this->rejectColumn($column);
             });
     }
 
@@ -197,6 +216,10 @@ trait CRUDModel
      */
     protected function rejectColumn($column)
     {
+        if (in_array($column, $this->hiddenFields)) {
+            return true;
+        }
+
         return ! in_array($column, $this->fillable) ||
             (in_array($column, $this->hidden) && ! in_array($column, $this->getMagicFields()));
     }

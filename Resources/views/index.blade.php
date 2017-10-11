@@ -9,23 +9,23 @@
     <div class="table-primary">
         <table class="table table-bordered" id="datatables">
             <thead>
-            <tr>
-                @foreach($model->getFields() as $field => $type )
+                <tr>
+                    @foreach($model->hideFields(['password'])->getFields() as $field => $type )
 
-                    @if( $type == 'textarea' )
+                        @if( $type == 'textarea' )
 
-                    @else
-                        <th>{{ title_case(str_replace('_', ' ', $field))}}</th>
-                    @endif
-                @endforeach
-                <th>Actions</th>
-            </tr>
+                        @else
+                            <th>{{ title_case(str_replace('_', ' ', $field))}}</th>
+                        @endif
+                    @endforeach
+                    <th>Actions</th>
+                </tr>
             </thead>
             <tbody>
 
             @foreach( $rows as $row )
                 <tr>
-                    @foreach( $model->getFields() as $field => $type )
+                    @foreach($model->hideFields(['password'])->getFields() as $field => $type )
                         @if( $type == 'textarea' )
 
                         @else
