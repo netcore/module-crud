@@ -5,7 +5,7 @@ namespace Modules\Crud\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Modules\Crud\Traits\CrudifyModel;
 
-class CrudRequest extends FormRequest
+class CRUDRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

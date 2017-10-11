@@ -2,7 +2,7 @@
 
 namespace Modules\Crud\Traits;
 
-use Modules\Crud\Http\Requests\CrudRequest;
+use Modules\Crud\Http\Requests\CRUDRequest;
 use Illuminate\Database\Eloquent\Model;
 
 trait CRUDController
@@ -44,11 +44,11 @@ trait CRUDController
 
     /**
      * Store a newly created resource in storage.
-     * @param  CrudRequest $request
+     * @param  CRUDRequest $request
      *
      * @return Response
      */
-    public function store(CrudRequest $request)
+    public function store(CRUDRequest $request)
     {
         $this->getModel()->create($request->all());
 
@@ -84,9 +84,9 @@ trait CRUDController
     /**
      * Update the specified resource in storage.
      * @param $value
-     * @param  CrudRequest $request
+     * @param  CRUDRequest $request
      */
-    public function update(CrudRequest $request, $value)
+    public function update(CRUDRequest $request, $value)
     {
         $model = $this->getModel()->findOrFail($value);
         $model->update($request->all());
