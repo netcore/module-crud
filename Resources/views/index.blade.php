@@ -34,15 +34,15 @@
                     @endforeach
 
                     <td>
-                        <a href="{{ crudify_route('show', $row) }}" class="btn btn-xs btn-default">
+                        <a href="{{ crud_route('show', $row) }}" class="btn btn-xs btn-default">
                             <i class="fa fa-eye"></i>
                         </a>
 
-                        <a href="{{ crudify_route('edit', $row) }}" class="btn btn-xs btn-primary">
+                        <a href="{{ crud_route('edit', $row) }}" class="btn btn-xs btn-primary">
                             <i class="fa fa-pencil"></i>
                         </a>
 
-                        {!! Form::open(['url' => crudify_route('destroy', $row->id), 'style' => 'display: inline-block']) !!}
+                        {!! Form::open(['url' => crud_route('destroy', $row->id), 'style' => 'display: inline-block']) !!}
                             {{ method_field('DELETE') }}
                             <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Are you sure?');">
                                 <i class="fa fa-trash"></i>

@@ -17,11 +17,11 @@ if (! app()->routesAreCached()) {
 }
 
 /**
- * @param $current
  * @param $to
+ * @param $parameters
  * @return string
  */
-function crudify_route($to, $parameters = null){
+function crud_route($to, $parameters = null){
 
     $routeName = request()->route()->getName();
 

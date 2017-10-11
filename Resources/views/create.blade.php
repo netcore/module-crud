@@ -7,7 +7,7 @@
 @section('crud')
     @include('admin::_partials._messages')
 
-    {!! Form::open(['url' => crudify_route('store')]) !!}
+    {!! Form::open(['url' => crud_route('store')]) !!}
         <div class="p-x-1">
             @include('crud::_fields', ['fields' => $model->getFields()])
 
