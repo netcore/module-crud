@@ -27,9 +27,11 @@
 @section('scripts')
     <script>
         $(function() {
-            $('.datepicker').datepicker();
+            $('.datepicker').datepicker({
+                format: 'yyyy-mm-dd'
+            });
 
-            $('.ritch-textarea').summernote({
+            $('textarea').summernote({
                 height: 200,
                 toolbar: [
                     ['parastyle', ['style']],
