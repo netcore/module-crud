@@ -3,16 +3,41 @@
 namespace Modules\Crud\Traits;
 
 use Doctrine\DBAL\Types\StringType;
+use MongoDB\BSON\Timestamp;
 
 trait CrudifyModel {
 
+    /**
+     * Data type mapping against form generator
+     *
+     * @var array
+     */
     protected $typeMap = [
         'string' => 'text',
         'text' => 'textarea',
-        'tinyint' => 'select'
+        'tinyint' => 'select',
+        'datetime' => 'datetime'
     ];
 
-    // TODO: Implement email, password as magic methods
+    /**
+     * List of column names for different input field types
+     *
+     * @var array
+     */
+    protected $magicFields = [
+        'email' => 'email',
+        'password' => 'password'
+    ];
+
+    /**
+     * List of extra validation rules for magic fields
+     *
+     * @var array
+     */
+    protected $magicFieldValidation = [
+        'email' => 'email',
+        'password' => 'confirmed'
+    ];
 
     /**
      * @return string
@@ -23,17 +48,13 @@ trait CrudifyModel {
     }
 
     /**
+     * Return list of all magic fields
+     *
      * @return array
      */
-    public function buildFields()
+    public function getMagicFields()
     {
-        $fields = [];
-
-        foreach($this->readDatabaseSchema() as $field => $schema) {
-            $fields[$field] = $this->typeMap[$schema->getType()->getName()] ?? 'text';
-        }
-
-        return $fields;
+        return $this->magicFields;
     }
 
     /**
@@ -44,6 +65,27 @@ trait CrudifyModel {
     public function getValidationRules()
     {
         return $this->buildValidation($this->readDatabaseSchema());
+    }
+
+    /**
+     * Build list of fields with HTML type
+     *
+     * @return array
+     */
+    public function buildFields()
+    {
+        $fields = [];
+
+        foreach($this->readDatabaseSchema() as $field => $schema) {
+            // Determine if field is in a magic field.
+            if (in_array($field, $this->getMagicFields())) {
+                $fields[$field] = $this->getMagicFields()[$field] ?? 'text';
+            } else {
+                $fields[$field] = $this->typeMap[$schema->getType()->getName()] ?? 'text';
+            }
+        }
+
+        return $fields;
     }
 
     /**
@@ -79,9 +121,16 @@ trait CrudifyModel {
             if ($columnInstance->getType() instanceof StringType) {
                 $rules[$column][] = 'max:' . $columnInstance->getLength();
             }
+
+            // Magic field additional validation rules
+            if (in_array($column, $this->getMagicFields())) {
+                $rules[$column] = $this->getMagicFieldValidation($column);
+            }
         }
 
-        return array_merge_recursive($rules, $this->buildUniqueRuleset());
+        $rules = array_merge_recursive($rules, $this->buildUniqueRuleset());
+
+        return $rules;
     }
 
     /**
@@ -110,6 +159,17 @@ trait CrudifyModel {
         }
 
         return $rules;
+    }
+
+    /**
+     * Return additional validation rules for magic field
+     *
+     * @param $field
+     * @return array
+     */
+    protected function getMagicFieldValidation($field)
+    {
+        return $this->magicFieldValidation[$field] ?? [];
     }
 
 }
