@@ -18,17 +18,6 @@ trait CrudifyController
     }
 
     /**
-     * Find single row
-     *
-     * @param $value
-     * @return mixed
-     */
-    public function findRow($value)
-    {
-        return $this->getModel()->findOrFail($value);
-    }
-
-    /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\View\View
@@ -75,7 +64,7 @@ trait CrudifyController
     public function show($value)
     {
         return $this->view('crud::show', [
-            'model' => $this->findRow($value)
+            'model' => $this->getModel()->findOrFail($value)
         ]);
     }
 
@@ -88,7 +77,7 @@ trait CrudifyController
     public function edit($value)
     {
         return $this->view('crud::edit', [
-            'model' => $this->findRow($value)
+            'model' => $this->getModel()->findOrFail($value)
         ]);
     }
 
@@ -99,7 +88,7 @@ trait CrudifyController
      */
     public function update(CrudRequest $request, $value)
     {
-        $model = $this->findRow($value);
+        $model = $this->getModel()->findOrFail($value);
         $model->update($request->all());
 
         return back()->withSuccess($this->getModel()->getClassName() . ' saved successfully.');
@@ -115,7 +104,7 @@ trait CrudifyController
     {
         $routeName = request()->route()->getName();
 
-        if ( $routeName AND view()->exists($routeName) ) {
+        if ($routeName && view()->exists($routeName)) {
             return view($routeName, $variables);
         }
 

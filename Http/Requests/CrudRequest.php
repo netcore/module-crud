@@ -3,6 +3,7 @@
 namespace Modules\Crud\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Modules\Crud\Traits\CrudifyModel;
 
 class CrudRequest extends FormRequest
 {
@@ -23,9 +24,8 @@ class CrudRequest extends FormRequest
      */
     public function rules()
     {
-        $model = $this->route()->controller->findRow(
-            array_pop($this->route()->parameters)
-        );
+        /** @var CrudifyModel $model */
+        $model = $this->route()->controller->getModel();
 
         return $model->getValidationRules();
     }

@@ -9,11 +9,7 @@
     @include('admin::_partials._messages')
 
     {!! Form::model($model, ['url' => crudify_route('update', $model->id)]) !!}
-
-        {{ csrf_field() }}
-
-        <input name="_method" type="hidden" value="PUT">
-
+        {{ method_field('PUT') }}
         <div class="p-x-1">
             @include('crud::_fields', ['fields' => $model->getFields()])
 

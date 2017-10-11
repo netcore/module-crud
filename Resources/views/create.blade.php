@@ -7,8 +7,7 @@
 @section('crud')
     @include('admin::_partials._messages')
 
-    {!! Form::open(['url' => crudify_route('store')]) !!}
-        {{ csrf_field() }}
+    {!! Form::open(['url' => route('user::users.store')]) !!}
         <div class="p-x-1">
             @include('crud::_fields', ['fields' => $model->getFields()])
 
