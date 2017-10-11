@@ -4,8 +4,8 @@ namespace Modules\Crud\Traits;
 
 use Doctrine\DBAL\Types\StringType;
 
-trait CrudifyModel {
-
+trait CRUDModel
+{
     /**
      * Data type mapping against form generator
      *

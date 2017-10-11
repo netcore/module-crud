@@ -5,7 +5,7 @@ namespace Modules\Crud\Traits;
 use Modules\Crud\Http\Requests\CrudRequest;
 use Illuminate\Database\Eloquent\Model;
 
-trait CrudifyController
+trait CRUDController
 {
     /**
      * Get model instance
