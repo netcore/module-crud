@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 trait CRUDController
 {
+
     /**
      * Get model instance
      *
@@ -18,6 +19,14 @@ trait CRUDController
     }
 
     /**
+     * @return mixed
+     */
+    public function getConfig()
+    {
+        return $this->config;
+    }
+
+    /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\View\View
@@ -25,8 +34,9 @@ trait CRUDController
     public function index()
     {
         return $this->view('crud::index', [
-            'model' => $this->getModel(),
-            'rows' => $this->getModel()->all()
+            'model'  => $this->getModel(),
+            'rows'   => $this->getModel()->all(),
+            'config' => $this->getConfig()
         ]);
     }
 
@@ -121,6 +131,6 @@ trait CRUDController
             return view($routeName, $variables);
         }
 
-        return view($name,$variables);
+        return view($name, $variables);
     }
 }

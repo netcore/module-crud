@@ -6,6 +6,7 @@ use Doctrine\DBAL\Types\StringType;
 
 trait CRUDModel
 {
+
     /**
      * List of fields that must be hidden
      *
@@ -91,11 +92,12 @@ trait CRUDModel
     /**
      * Get array of validation rules
      *
+     * @param $model
      * @return array
      */
-    public function getValidationRules()
+    public function getValidationRules($model)
     {
-        return $this->buildValidation($this->readDatabaseSchema());
+        return $this->buildValidation($this->readDatabaseSchema(), $model);
     }
 
     /**
@@ -143,9 +145,10 @@ trait CRUDModel
      * Build validation rules
      *
      * @param $columns
+     * @param $model
      * @return array
      */
-    protected function buildValidation($columns)
+    protected function buildValidation($columns, $model)
     {
         $rules = [];
 
@@ -164,7 +167,7 @@ trait CRUDModel
             }
         }
 
-        $rules = array_merge_recursive($rules, $this->buildUniqueRuleset());
+        $rules = array_merge_recursive($rules, $this->buildUniqueRuleset($model));
 
         return $rules;
     }
@@ -172,9 +175,10 @@ trait CRUDModel
     /**
      * Read unique indexes from table and apply unique rule
      *
+     * @param $model
      * @return array
      */
-    protected function buildUniqueRuleset()
+    protected function buildUniqueRuleset($model)
     {
         $rules = [];
         $indexList = \DB::select(
@@ -187,7 +191,7 @@ trait CRUDModel
 
                 // If the model does exist then append the route key name (usually: id)
                 if ($this->exists()) {
-                    $rule .= ',' . $index->Column_name . ',' . $this->{$this->getRouteKeyName()};
+                    $rule .= ',' . $index->Column_name . ',' . $model->{$this->getRouteKeyName()};
                 }
 
                 $rules[$index->Column_name][] = $rule;

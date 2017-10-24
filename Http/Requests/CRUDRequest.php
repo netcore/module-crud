@@ -26,7 +26,8 @@ class CRUDRequest extends FormRequest
     {
         /** @var CrudifyModel $model */
         $model = $this->route()->controller->getModel();
+        $thisModel = $model->whereEmail($this->email)->first();
 
-        return $model->getValidationRules();
+        return $model->getValidationRules($thisModel);
     }
 }

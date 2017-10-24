@@ -14,11 +14,13 @@
                 @yield('crudName')
         </h1>
 
-        <div class="col-xs-12 width-md-auto width-lg-auto width-xl-auto pull-md-right">
-            <a href="{{ crud_route('create')}}" class="btn btn-primary btn-block">
-                <span class="btn-label-icon left ion-plus-round"></span>Create new {{$model->getClassName()}}
-            </a>
-        </div>
+        @if(isset($config['allow-view']) && $config['allow-delete'] || !isset($config['allow-create']))
+            <div class="col-xs-12 width-md-auto width-lg-auto width-xl-auto pull-md-right">
+                <a href="{{ crud_route('create')}}" class="btn btn-primary btn-block">
+                    <span class="btn-label-icon left ion-plus-round"></span>Create new {{$model->getClassName()}}
+                </a>
+            </div>
+        @endif
     </div>
 
     <div class="panel">
