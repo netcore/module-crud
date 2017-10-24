@@ -28,7 +28,7 @@
                         @endif
                     @endforeach
                     <td>
-                        @if(isset($config['allow-view']) && $config['allow-delete'] || !isset($config['allow-delete']))
+                        @if(isset($config['allow-view']) && $config['allow-view'] || !isset($config['allow-view']))
                         <a href="{{ crud_route('show', $row) }}" class="btn btn-xs btn-default">
                             <i class="fa fa-eye"></i>
                         </a>

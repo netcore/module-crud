@@ -13,8 +13,7 @@
                 <i class="page-header-icon ion-ios-keypad"></i>{{ str_plural($model->getClassName()) }} / </span>
                 @yield('crudName')
         </h1>
-
-        @if(isset($config['allow-view']) && $config['allow-delete'] || !isset($config['allow-create']))
+        @if(isset($config['allow-create']) && $config['allow-create'] || !isset($config['allow-create']))
             <div class="col-xs-12 width-md-auto width-lg-auto width-xl-auto pull-md-right">
                 <a href="{{ crud_route('create')}}" class="btn btn-primary btn-block">
                     <span class="btn-label-icon left ion-plus-round"></span>Create new {{$model->getClassName()}}

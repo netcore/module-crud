@@ -87,7 +87,8 @@ trait CRUDController
     public function edit($value)
     {
         return $this->view('crud::edit', [
-            'model' => $this->getModel()->findOrFail($value)
+            'model'  => $this->getModel()->findOrFail($value),
+            'config' => $this->getConfig()
         ]);
     }
 
