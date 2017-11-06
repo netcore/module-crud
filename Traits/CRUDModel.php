@@ -190,7 +190,7 @@ trait CRUDModel
                 $rule = 'unique:' . $this->getTable();
 
                 // If the model does exist then append the route key name (usually: id)
-                if ($this->exists()) {
+                if ($this->exists() && object_get($model, $this->getRouteKeyName())) {
                     $rule .= ',' . $index->Column_name . ',' . $model->{$this->getRouteKeyName()};
                 }
 
