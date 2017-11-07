@@ -20,10 +20,10 @@ trait CRUDModel
      * @var array
      */
     protected $typeMap = [
-        'string' => 'text',
-        'text' => 'textarea',
-        'tinyint' => 'select',
-        'boolean' => 'select',
+        'string'   => 'text',
+        'text'     => 'textarea',
+        'tinyint'  => 'select',
+        'boolean'  => 'select',
         'datetime' => 'datetime'
     ];
 
@@ -33,7 +33,7 @@ trait CRUDModel
      * @var array
      */
     protected $magicFields = [
-        'email' => 'email',
+        'email'    => 'email',
         'password' => 'password'
     ];
 
@@ -43,7 +43,7 @@ trait CRUDModel
      * @var array
      */
     protected $magicFieldValidation = [
-        'email' => 'email',
+        'email'    => 'email',
         'password' => 'confirmed'
     ];
 
@@ -54,7 +54,7 @@ trait CRUDModel
      */
     public function setPasswordAttribute($password)
     {
-        if (! empty($password)) {
+        if (!empty($password)) {
             $this->attributes['password'] = bcrypt($password);
         }
     }
@@ -110,7 +110,7 @@ trait CRUDModel
     {
         $fields = [];
 
-        foreach($this->readDatabaseSchema() as $field => $schema) {
+        foreach ($this->readDatabaseSchema() as $field => $schema) {
             // Determine if field is in a magic field.
             if (in_array($field, $this->getMagicFields())) {
                 $fields[$field] = $this->getMagicFields()[$field] ?? 'text';
@@ -153,7 +153,7 @@ trait CRUDModel
     {
         $rules = [];
 
-        foreach($columns as $column => $columnInstance) {
+        foreach ($columns as $column => $columnInstance) {
             $rules[$column] = [];
 
             $rules[$column][] = $columnInstance->getNotnull() ? 'required' : 'nullable';
@@ -183,24 +183,67 @@ trait CRUDModel
     {
         $rules = [];
 
+        $mysqlQuery = "SHOW INDEXES FROM " . $this->getTable() . " WHERE NOT Non_unique and Key_Name <> 'PRIMARY'";
+
+        $pgsqlQuery = "
+        select
+            t.relname as table_name,
+            i.relname as index_name,
+            ix.indisunique as uniqueness,
+            ix.indisprimary as primary,
+            array_to_string(array_agg(a.attname), ', ') as Column_name
+        from
+            pg_class t,
+            pg_class i,
+            pg_index ix,
+            pg_attribute a
+        where
+            t.oid = ix.indrelid
+            and i.oid = ix.indexrelid
+            and ix.indisunique = true
+            and ix.indisprimary = false
+            and a.attrelid = t.oid
+            and a.attnum = ANY(ix.indkey)
+            and t.relkind = 'r'
+            and t.relname like '" . $this->getTable() . "'
+        group by
+            t.relname,
+            i.relname,
+            ix.indisunique,
+            ix.indisprimary
+        order by
+            t.relname,
+            i.relname,
+            ix.indisunique,
+            ix.indisprimary
+            ;
+        ";
+
+        $mysql = config('database.default') == 'mysql';
+        $query = $mysql ? $mysqlQuery : $pgsqlQuery;
+
         $indexList = \DB::select(
-            \DB::raw("SHOW INDEXES FROM " . $this->getTable() . " WHERE NOT Non_unique and Key_Name <> 'PRIMARY'")
+            \DB::raw($query)
         );
 
         foreach ($indexList as $index) {
-            if(in_array($index->Column_name, $this->fillable)) {
+
+            $property = $mysql ? 'Column_name' : 'column_name';
+            $columnName = object_get($index, $property);
+
+            if (in_array($columnName, $this->fillable)) {
                 $rule = 'unique:' . $this->getTable();
 
                 // If the model does exist then append the route key name (usually: id)
                 if ($this->exists() && object_get($model, $this->getRouteKeyName())) {
-                    $rule .= ',' . $index->Column_name;
+                    $rule .= ',' . $columnName;
 
-                    if($model) {
+                    if ($model) {
                         $rule .= ',' . $model->{$this->getRouteKeyName()};
                     }
                 }
 
-                $rules[$index->Column_name][] = $rule;
+                $rules[$columnName][] = $rule;
             }
         }
 
@@ -230,7 +273,7 @@ trait CRUDModel
             return true;
         }
 
-        return ! in_array($column, $this->fillable) ||
-            (in_array($column, $this->hidden) && ! in_array($column, $this->getMagicFields()));
+        return !in_array($column, $this->fillable) ||
+            (in_array($column, $this->hidden) && !in_array($column, $this->getMagicFields()));
     }
 }
