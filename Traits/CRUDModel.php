@@ -23,6 +23,7 @@ trait CRUDModel
         'string' => 'text',
         'text' => 'textarea',
         'tinyint' => 'select',
+        'boolean' => 'select',
         'datetime' => 'datetime'
     ];
 
