@@ -29,18 +29,16 @@ class CRUDRequest extends FormRequest
 
         $userId = request()->route('user');
         if($userId) {
-
             $thisModel = $model->find($userId);
             $rules = $model->getValidationRules($thisModel);
-
-            $isStore = $userId ? false : true;
-            if(isset($rules['password']) AND $isStore) {
-                $rules['password'] .= '|required';
-            }
-
         } else {
             $thisModel = null;
             $rules = $model->getValidationRules($thisModel);
+        }
+
+        $isStore = $userId ? false : true;
+        if(isset($rules['password']) AND $isStore) {
+            $rules['password'] .= '|required';
         }
 
         return $rules;
