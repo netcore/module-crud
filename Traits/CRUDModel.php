@@ -182,6 +182,7 @@ trait CRUDModel
     protected function buildUniqueRuleset($model)
     {
         $rules = [];
+
         $indexList = \DB::select(
             \DB::raw("SHOW INDEXES FROM " . $this->getTable() . " WHERE NOT Non_unique and Key_Name <> 'PRIMARY'")
         );
@@ -192,7 +193,11 @@ trait CRUDModel
 
                 // If the model does exist then append the route key name (usually: id)
                 if ($this->exists() && object_get($model, $this->getRouteKeyName())) {
-                    $rule .= ',' . $index->Column_name . ',' . $model->{$this->getRouteKeyName()};
+                    $rule .= ',' . $index->Column_name;
+
+                    if($model) {
+                        $rule .= ',' . $model->{$this->getRouteKeyName()};
+                    }
                 }
 
                 $rules[$index->Column_name][] = $rule;

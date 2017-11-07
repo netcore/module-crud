@@ -26,14 +26,21 @@ class CRUDRequest extends FormRequest
     {
         /** @var CrudifyModel $model */
         $model = $this->route()->controller->getModel();
-        $thisModel = $model->whereEmail($this->email)->first();
 
-        $rules = $model->getValidationRules($thisModel);
+        $userId = request()->route('user');
+        if($userId) {
 
-        $isUpdate = request()->route('user') ? true : false;
-        $isStore = ! $isUpdate;
-        if(isset($rules['password']) AND $isStore) {
-            $rules['password'] .= '|required';
+            $thisModel = $model->find($userId);
+            $rules = $model->getValidationRules($thisModel);
+
+            $isStore = $userId ? false : true;
+            if(isset($rules['password']) AND $isStore) {
+                $rules['password'] .= '|required';
+            }
+
+        } else {
+            $thisModel = null;
+            $rules = $model->getValidationRules($thisModel);
         }
 
         return $rules;

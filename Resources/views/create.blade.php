@@ -14,7 +14,7 @@
             <button type="submit" class="btn btn-lg btn-success m-t-3 pull-xs-right">
                 Create new {{ $model->getClassName() }}
             </button>
-            <a href="{{ url()->previous() }}" class="btn btn-lg btn-default m-t-3 m-r-1 pull-xs-right">Back</a>
+            <a href="{{ crud_route('index') }}" class="btn btn-lg btn-default m-t-3 m-r-1 pull-xs-right">Back</a>
         </div>
     {!! Form::close() !!}
 @endsection
