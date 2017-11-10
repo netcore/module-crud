@@ -5,8 +5,7 @@
         @include('crud::fields.' . $type, [
             'attributes' => [
                     'id' => $field,
-                    'class' =>
-                    'form-control',
+                    'class' => 'form-control',
                     'autocomplete' => 'off'
                 ]
             ])

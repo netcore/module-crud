@@ -15,7 +15,7 @@
                             <th>{{ title_case(str_replace('_', ' ', $field)) }}</th>
                         @endif
                     @endforeach
-                    <th>Actions</th>
+                    <th class="text-center">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -27,22 +27,22 @@
                             <td>{{ $row->{$field} }}</td>
                         @endif
                     @endforeach
-                    <td>
+                    <td width="15%" class="text-center">
                         @if(isset($config['allow-view']) && $config['allow-view'] || !isset($config['allow-view']))
                         <a href="{{ crud_route('show', $row) }}" class="btn btn-xs btn-default">
-                            <i class="fa fa-eye"></i>
+                            <i class="fa fa-eye"></i> View
                         </a>
                         @endif
 
                         <a href="{{ crud_route('edit', $row) }}" class="btn btn-xs btn-primary">
-                            <i class="fa fa-pencil"></i>
+                            <i class="fa fa-pencil"></i> Edit
                         </a>
 
                         @if(isset($config['allow-delete']) && $config['allow-delete'] || !isset($config['allow-delete']))
                             {!! Form::open(['url' => crud_route('destroy', $row->id), 'style' => 'display: inline-block']) !!}
                                 {{ method_field('DELETE') }}
                                 <button type="submit" class="btn btn-xs btn-danger" onclick="return confirm('Are you sure?');">
-                                    <i class="fa fa-trash"></i>
+                                    <i class="fa fa-trash"></i> Delete
                                 </button>
                             {!! Form::close() !!}
                         @endif

@@ -29,14 +29,13 @@ class CRUDRequest extends FormRequest
 
         $dealingWithUser = request()->segment(2) == 'users';
 
-        if($dealingWithUser) {
-
+        if ($dealingWithUser) {
             $userId = request()->route('user');
             $thisModel = $model->find($userId);
             $rules = $model->getValidationRules($thisModel);
 
             $isStore = $userId ? false : true;
-            if(isset($rules['password']) AND $isStore) {
+            if (isset($rules['password']) AND $isStore) {
                 $rules['password'] .= '|required';
             }
         } else {
