@@ -20,6 +20,18 @@
                 </a>
             </div>
         @endif
+        @if(isset($config['allow-export']) && $config['allow-export'] || !isset($config['allow-export']))
+            <div class="col-xs-12 width-md-auto width-lg-auto width-xl-auto pull-md-right">
+                <a href="{{ crud_route('export', ['type' => 'xls'])}}" class="btn btn-primary btn-block">
+                    Export XLS
+                </a>
+            </div>
+            <div class="col-xs-12 width-md-auto width-lg-auto width-xl-auto pull-md-right">
+                <a href="{{ crud_route('export', ['type' => 'csv'])}}" class="btn btn-primary btn-block">
+                    Export CSV
+                </a>
+            </div>
+        @endif
     </div>
 
     <div class="panel">

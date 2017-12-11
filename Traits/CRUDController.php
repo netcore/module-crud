@@ -2,6 +2,7 @@
 
 namespace Modules\Crud\Traits;
 
+use Maatwebsite\Excel\Facades\Excel;
 use Modules\Crud\Http\Requests\CRUDRequest;
 use Illuminate\Database\Eloquent\Model;
 
@@ -133,5 +134,20 @@ trait CRUDController
         }
 
         return view($name, $variables);
+    }
+
+    /**
+     * Export model as an Excel/CSV document
+     * @param string $type
+     */
+    public function export($type = 'xls'){
+        $tableName = $this->getModel()->getTable();
+        $model = $this->getModel()->get();
+
+        Excel::create(kebab_case($tableName.'_'.time()), function($excel) use($model, $tableName){
+            $excel->sheet(camel_case($tableName), function($sheet) use($model) {
+                $sheet->fromModel($model);
+            });
+        })->export($type);
     }
 }
