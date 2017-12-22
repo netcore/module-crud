@@ -25,14 +25,23 @@ function crud_route($to, $parameters = null){
 
     $routeName = request()->route()->getName();
 
-    $segments = explode('.', $routeName);
-
-    array_pop($segments);
-    $segments[] = $to;
-
-    if( $parameters ){
-        return route(implode('.', $segments),$parameters);
+    $namespace = '';
+    $hasNamespace = strpos($routeName, '::');
+    if($hasNamespace) {
+        $namespaceSegments = explode('::', $routeName);
+        $namespace = array_get($namespaceSegments, 0) . '::';
     }
 
-    return route(implode('.', $segments));
+    $segments = explode('.', $routeName);
+    array_pop($segments);
+
+    $segments[] = $to;
+
+    $routeName = $namespace . implode('.', $segments);
+
+    if( $parameters ){
+        return route($routeName, $parameters);
+    }
+
+    return route($routeName);
 }
