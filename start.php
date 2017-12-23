@@ -32,6 +32,7 @@ function crud_route($to, $parameters = null){
         $namespace = array_get($namespaceSegments, 0) . '::';
     }
 
+    $routeName = str_replace($namespace, '', $routeName);
     $segments = explode('.', $routeName);
     array_pop($segments);
 
