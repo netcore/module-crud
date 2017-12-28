@@ -3,19 +3,19 @@
 namespace Modules\Crud\Traits;
 
 use Doctrine\DBAL\Types\StringType;
+use Illuminate\Support\Collection;
 
 trait CRUDModel
 {
-
     /**
-     * List of fields that must be hidden
+     * List of fields that must be hidden.
      *
      * @var array
      */
     public $hiddenFields = [];
 
     /**
-     * Data type mapping against form generator
+     * Data type mapping against form generator.
      *
      * @var array
      */
@@ -28,7 +28,7 @@ trait CRUDModel
     ];
 
     /**
-     * List of column names for different input field types
+     * List of column names for different input field types.
      *
      * @var array
      */
@@ -38,7 +38,7 @@ trait CRUDModel
     ];
 
     /**
-     * List of extra validation rules for magic fields
+     * List of extra validation rules for magic fields.
      *
      * @var array
      */
@@ -48,11 +48,40 @@ trait CRUDModel
     ];
 
     /**
-     * To avoid empty password to be hashed, we hash it in model
+     * CRUD config.
+     *
+     * @var array
+     */
+    public $crudConfig = [
+        'allow-delete' => true,
+        'allow-create' => true,
+        'allow-view'   => true,
+        'allow-export' => false,
+    ];
+
+    /**
+     * Check if crud config allow to perform given operation.
+     *
+     * @param string $action
+     * @param bool $default
+     * @return bool
+     */
+    public function isAbleTo(string $action, bool $default = false): bool
+    {
+        if (isset($this->crudConfig['allow-' . $action])) {
+            return (bool) $this->crudConfig['allow-' . $action];
+        }
+
+        return $default;
+    }
+
+    /**
+     * To avoid empty password to be hashed, we hash it in model.
      *
      * @param $password
+     * @return void
      */
-    public function setPasswordAttribute($password)
+    public function setPasswordAttribute($password): void
     {
         if (!empty($password)) {
             $this->attributes['password'] = bcrypt($password);
@@ -60,7 +89,7 @@ trait CRUDModel
     }
 
     /**
-     * Set fields that must be hidden from "getFields"
+     * Set fields that must be hidden from "getFields".
      *
      * @param array $fields
      * @return $this
@@ -73,40 +102,42 @@ trait CRUDModel
     }
 
     /**
+     * Get the model class name.
+     *
      * @return string
      */
-    public function getClassName()
+    public function getClassName(): string
     {
         return class_basename($this);
     }
 
     /**
-     * Return list of all magic fields
+     * Return list of all magic fields.
      *
      * @return array
      */
-    public function getMagicFields()
+    public function getMagicFields(): array
     {
         return $this->magicFields;
     }
 
     /**
-     * Get array of validation rules
+     * Get array of validation rules.
      *
      * @param $model
      * @return array
      */
-    public function getValidationRules($model)
+    public function getValidationRules($model): array
     {
         return $this->buildValidation($this->readDatabaseSchema(), $model);
     }
 
     /**
-     * Build list of fields with HTML type
+     * Build list of fields with HTML type.
      *
      * @return array
      */
-    public function getFields()
+    public function getFields(): array
     {
         $fields = [];
 
@@ -128,11 +159,11 @@ trait CRUDModel
     }
 
     /**
-     * Read the database schema and return fillable fields as Column instances
+     * Read the database schema and return fillable fields as Column instances.
      *
      * @return Collection
      */
-    protected function readDatabaseSchema()
+    protected function readDatabaseSchema(): Collection
     {
         $schema = \DB::getDoctrineSchemaManager();
 
@@ -143,13 +174,13 @@ trait CRUDModel
     }
 
     /**
-     * Build validation rules
+     * Build validation rules.
      *
      * @param $columns
      * @param $model
      * @return array
      */
-    protected function buildValidation($columns, $model)
+    protected function buildValidation($columns, $model): array
     {
         $rules = [];
 
@@ -174,12 +205,12 @@ trait CRUDModel
     }
 
     /**
-     * Read unique indexes from table and apply unique rule
+     * Read unique indexes from table and apply unique rule.
      *
      * @param $model
      * @return array
      */
-    protected function buildUniqueRuleset($model)
+    protected function buildUniqueRuleset($model): array
     {
         $rules = [];
 
@@ -251,7 +282,7 @@ trait CRUDModel
     }
 
     /**
-     * Return additional validation rules for magic field
+     * Return additional validation rules for magic field.
      *
      * @param $field
      * @return array
@@ -262,12 +293,12 @@ trait CRUDModel
     }
 
     /**
-     * Determine if column must be rejected from output
+     * Determine if column must be rejected from output.
      *
      * @param $column
      * @return bool
      */
-    protected function rejectColumn($column)
+    protected function rejectColumn($column): bool
     {
         if (in_array($column, $this->hiddenFields)) {
             return true;
@@ -275,5 +306,42 @@ trait CRUDModel
 
         return !in_array($column, $this->fillable) ||
             (in_array($column, $this->hidden) && !in_array($column, $this->getMagicFields()));
+    }
+
+    /**
+     * Get the presenter class for datatable.
+     *
+     * @return string
+     */
+    public function getDatatablePresenter(): string
+    {
+        $className = $this->getClassName() . 'ModuleDatatablePresenter';
+        $namespace = app()->getNamespace();
+
+        return $namespace . 'Presenters\\' . $className;
+    }
+
+    /**
+     * Get datatable columns.
+     *
+     * @return array
+     */
+    final public function getDatatableColumns(): array
+    {
+        $columns = [];
+        $presenter = $this->getDatatablePresenter();
+
+        if (class_exists($presenter)) {
+            return app($presenter)->getDatatableColumns();
+        }
+
+        // CRUD module fallback if presenter doesn't exist.
+        foreach ($this->hideFields(['password'])->getFields() as $field => $type) {
+            if ($type !== 'textarea') {
+                $columns[$field] = title_case(str_replace('_', ' ', $field));
+            }
+        }
+
+        return $columns;
     }
 }
