@@ -15,7 +15,7 @@ composer require netcore/module-crud
 
 You need to add `CRUDModel` and `CRUDController` trait to your model and controller.
 
-Your controller should look like this:
+Controller:
 ```php 
 <?php
 
@@ -44,3 +44,32 @@ class ArticlesController extends Controller
     }
 }
 ```
+
+Model:
+```php 
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+use Modules\Crud\Traits\CRUDModel;
+
+class Article extends Model
+{
+    use CRUDModel; // <- This is required
+    
+    /**
+     * Mass assignable fields. 
+     *
+     * @var array
+     **/
+    protected $fillable = [
+        'is_published',
+        'views',
+    ];
+
+    .... Relations etc ...
+}
+```
+
+## Datatable configuration
