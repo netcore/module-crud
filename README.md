@@ -3,9 +3,9 @@
 ## Pre-installation 
 This package is part of Netcore CMS ecosystem and is only functional in a project that has following packages installed:
 
-https://github.com/netcore/netcore
-https://github.com/netcore/module-admin
-https://github.com/nWidart/laravel-modules
+- https://github.com/netcore/netcore
+- https://github.com/netcore/module-admin
+- https://github.com/nWidart/laravel-modules
 
 ## Installation
 
