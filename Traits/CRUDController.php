@@ -8,9 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 trait CRUDController
 {
-
     /**
-     * Get model instance
+     * Get model instance.
      *
      * @return mixed
      */
@@ -20,11 +19,13 @@ trait CRUDController
     }
 
     /**
+     * Get config.
+     *
      * @return mixed
      */
     public function getConfig()
     {
-        return $this->config;
+        return $this->model->crudConfig;
     }
 
     /**
@@ -34,10 +35,13 @@ trait CRUDController
      */
     public function index()
     {
+        session()->put('crud-active-model', get_class($this->getModel()));
+        session()->put('crud-route-name', request()->route()->getName());
+
         return $this->view('crud::index', [
-            'model'  => $this->getModel(),
-            'rows'   => $this->getModel()->all(),
-            'config' => $this->getConfig()
+            'model'     => $this->getModel(),
+            'config'    => $this->getConfig(),
+            'datatable' => $this->getModel()->getDatatableColumns(),
         ]);
     }
 
@@ -49,12 +53,13 @@ trait CRUDController
     public function create()
     {
         return $this->view('crud::create', [
-            'model' => $this->getModel()
+            'model' => $this->getModel(),
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
+     *
      * @param  CRUDRequest $request
      *
      * @return Response
@@ -75,7 +80,7 @@ trait CRUDController
     public function show($value)
     {
         return $this->view('crud::show', [
-            'model' => $this->getModel()->findOrFail($value)
+            'model' => $this->getModel()->findOrFail($value),
         ]);
     }
 
@@ -89,14 +94,16 @@ trait CRUDController
     {
         return $this->view('crud::edit', [
             'model'  => $this->getModel()->findOrFail($value),
-            'config' => $this->getConfig()
+            'config' => $this->getConfig(),
         ]);
     }
 
     /**
      * Update the specified resource in storage.
+     *
      * @param $value
-     * @param  CRUDRequest $request
+     * @param CRUDRequest $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(CRUDRequest $request, $value)
     {
@@ -110,6 +117,7 @@ trait CRUDController
      * Delete CRUD record.
      *
      * @param $value
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy($value)
     {
@@ -120,7 +128,9 @@ trait CRUDController
     }
 
     /**
-     * @param      $name
+     * Get view.
+     *
+     * @param $name
      * @param $variables
      *
      * @return \Illuminate\View\View
@@ -138,14 +148,16 @@ trait CRUDController
 
     /**
      * Export model as an Excel/CSV document
+     *
      * @param string $type
      */
-    public function export($type = 'xls'){
+    public function export($type = 'xls')
+    {
         $tableName = $this->getModel()->getTable();
         $model = $this->getModel()->get();
 
-        Excel::create(kebab_case($tableName.'_'.time()), function($excel) use($model, $tableName){
-            $excel->sheet(camel_case($tableName), function($sheet) use($model) {
+        Excel::create(kebab_case($tableName . '_' . time()), function ($excel) use ($model, $tableName) {
+            $excel->sheet(camel_case($tableName), function ($sheet) use ($model) {
                 $sheet->fromModel($model);
             });
         })->export($type);

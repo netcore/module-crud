@@ -12,22 +12,25 @@
 |
 */
 
-if (! app()->routesAreCached()) {
+if (!app()->routesAreCached()) {
     require __DIR__ . '/Http/routes.php';
 }
 
 /**
  * @param $to
  * @param $parameters
+ * @param null $routeName
  * @return string
  */
-function crud_route($to, $parameters = null){
-
-    $routeName = request()->route()->getName();
+function crud_route($to, $parameters = null, $routeName = null)
+{
+    if (!$routeName) {
+        $routeName = session('crud-route-name') ?? request()->route()->getName();
+    }
 
     $namespace = '';
     $hasNamespace = strpos($routeName, '::');
-    if($hasNamespace) {
+    if ($hasNamespace) {
         $namespaceSegments = explode('::', $routeName);
         $namespace = array_get($namespaceSegments, 0) . '::';
     }
@@ -40,7 +43,7 @@ function crud_route($to, $parameters = null){
 
     $routeName = $namespace . implode('.', $segments);
 
-    if( $parameters ){
+    if ($parameters) {
         return route($routeName, $parameters);
     }
 

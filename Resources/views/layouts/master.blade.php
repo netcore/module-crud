@@ -13,6 +13,7 @@
                 <i class="page-header-icon ion-ios-keypad"></i>{{ str_plural($model->getClassName()) }} / </span>
                 @yield('crudName')
         </h1>
+
         @if(isset($config['allow-create']) && $config['allow-create'] || !isset($config['allow-create']))
             <div class="col-xs-12 width-md-auto width-lg-auto width-xl-auto pull-md-right">
                 <a href="{{ crud_route('create')}}" class="btn btn-primary btn-block">
@@ -20,6 +21,7 @@
                 </a>
             </div>
         @endif
+
         @if(isset($config['allow-export']) && $config['allow-export'])
             <div class="col-xs-12 width-md-auto width-lg-auto width-xl-auto pull-md-right">
                 <a href="{{ crud_route('export', ['type' => 'xls'])}}" class="btn btn-primary btn-block">
@@ -38,6 +40,7 @@
         <div class="panel-heading">
             <div class="panel-title">@yield('crudPanelName')</div>
         </div>
+
         <div class="panel-body">
             @yield('crud')
         </div>
