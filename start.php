@@ -16,36 +16,39 @@ if (!app()->routesAreCached()) {
     require __DIR__ . '/Http/routes.php';
 }
 
-/**
- * @param $to
- * @param $parameters
- * @param null $routeName
- * @return string
- */
-function crud_route($to, $parameters = null, $routeName = null)
-{
-    if (!$routeName) {
-        $routeName = session('crud-route-name') ?? request()->route()->getName();
+if (!function_exists('crud_route')) {
+    /**
+     * @param $to
+     * @param $parameters
+     * @param null $routeName
+     * @return string
+     */
+    function crud_route($to, $parameters = null, $routeName = null)
+    {
+        if (!$routeName) {
+            $routeName = session('crud-route-name') ?? request()->route()->getName();
+        }
+
+        $namespace = '';
+        $hasNamespace = strpos($routeName, '::');
+        if ($hasNamespace) {
+            $namespaceSegments = explode('::', $routeName);
+            $namespace = array_get($namespaceSegments, 0) . '::';
+        }
+
+        $routeName = str_replace($namespace, '', $routeName);
+        $segments = explode('.', $routeName);
+        array_pop($segments);
+
+        $segments[] = $to;
+
+        $routeName = $namespace . implode('.', $segments);
+
+        if ($parameters) {
+            return route($routeName, $parameters);
+        }
+
+        return route($routeName);
     }
 
-    $namespace = '';
-    $hasNamespace = strpos($routeName, '::');
-    if ($hasNamespace) {
-        $namespaceSegments = explode('::', $routeName);
-        $namespace = array_get($namespaceSegments, 0) . '::';
-    }
-
-    $routeName = str_replace($namespace, '', $routeName);
-    $segments = explode('.', $routeName);
-    array_pop($segments);
-
-    $segments[] = $to;
-
-    $routeName = $namespace . implode('.', $segments);
-
-    if ($parameters) {
-        return route($routeName, $parameters);
-    }
-
-    return route($routeName);
 }
