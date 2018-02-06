@@ -15,6 +15,13 @@ trait CRUDModel
     public $hiddenFields = [];
 
     /**
+     * Specify whether passwords should be hashed or not
+     *
+     * @var bool
+     */
+    public $hashPasswords = true;
+
+    /**
      * Data type mapping against form generator.
      *
      * @var array
@@ -84,7 +91,7 @@ trait CRUDModel
     public function setPasswordAttribute($password): void
     {
         if (!empty($password)) {
-            $this->attributes['password'] = bcrypt($password);
+            $this->attributes['password'] = $this->hashPasswords ? bcrypt($password) : $password;
         }
     }
 
