@@ -53,8 +53,35 @@ class DatatableController extends Controller
         $datatable = DataTables::of($query);
 
         if ($presenter) {
-            $this->modifyDatatableColumns($datatable, $columns, $presenter);
             $rawColumns = $presenter->getRawColumns();
+
+            $rawColumns = array_merge($this->modifyDatatableColumns($datatable, $columns, $presenter), $rawColumns);
+        } else {
+            if ($model->isTranslatable()) {
+                foreach ($model->translatedAttributes as $field) {
+                    $datatable->editColumn($field, function ($row) use ($field) {
+                        return view('crud::datatable._translatable-field', [
+                            'row'   => $row,
+                            'field' => $field,
+                        ]);
+                    });
+
+                    $rawColumns[] = $field;
+                }
+            }
+
+            if ($model->hasAttachments()) {
+                foreach ($model->getAttachedFiles() as $name => $file) {
+                    $datatable->editColumn($name . '_file_name', function ($row) use ($name) {
+                        return view('crud::datatable._file-field', [
+                            'row'   => $row,
+                            'field' => $name,
+                        ]);
+                    });
+
+                    $rawColumns[] = $name . '_file_name';
+                }
+            }
         }
 
         // Add action column
@@ -77,18 +104,43 @@ class DatatableController extends Controller
      * @param $datatable
      * @param array $columns
      * @param $presenter
-     * @return void
+     * @return array
      */
-    private function modifyDatatableColumns(&$datatable, array $columns, $presenter): void
+    private function modifyDatatableColumns(&$datatable, array $columns, $presenter)
     {
+        $rawColumns = [];
+
         foreach ($columns as $name => $title) {
             $method = camel_case($name) . 'Modifier';
 
-            if (!method_exists($presenter, $method)) {
-                continue;
-            }
+            if ($name === 'translations') {
+                foreach ($title as $field => $subName) {
+                    $method = camel_case('translation_' . $field) . 'Modifier';
 
-            $datatable->editColumn($name, [$presenter, $method]);
+                    if (!method_exists($presenter, $method)) {
+                        $datatable->editColumn($field, function ($row) use ($field) {
+                            return view('crud::datatable._translatable-field', [
+                                'row'   => $row,
+                                'field' => $field,
+                            ]);
+                        });
+
+                        $rawColumns[] = $field;
+
+                        continue;
+                    }
+
+                    $datatable->editColumn($field, [$presenter, $method]);
+                }
+            } else {
+                if (!method_exists($presenter, $method)) {
+                    continue;
+                }
+
+                $datatable->editColumn($name, [$presenter, $method]);
+            }
         }
+
+        return $rawColumns;
     }
 }

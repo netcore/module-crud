@@ -1,1 +1,1 @@
-{{ Form::text($field, null, $attributes) }}
+{{ Form::text($field, isset($value) ? $value : null, $attributes) }}

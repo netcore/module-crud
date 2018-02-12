@@ -7,10 +7,16 @@
 @section('crud')
     @include('admin::_partials._messages')
 
-    {!! Form::model($model, ['url' => crud_route('update', $model->id)]) !!}
+    {!! Form::model($model, ['url' => crud_route('update', $model->id), 'files' => true]) !!}
     {{ method_field('PUT') }}
     <div class="p-x-1">
-        @include('crud::_fields', ['fields' => $model->getFields()])
+        @if($model->isTranslatable())
+            @include('crud::_translatable-fields', ['model' => $model, 'languages' => $languages])
+
+            <div style="margin-top:10px"></div>
+        @endif
+
+        @include('crud::_fields', ['model' => $model])
 
         <button type="submit" class="btn btn-md btn-success m-t-3 pull-xs-right">
             <i class="fa fa-save"></i> Save

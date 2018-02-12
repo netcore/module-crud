@@ -5,6 +5,7 @@ namespace Modules\Crud\Traits;
 use Maatwebsite\Excel\Facades\Excel;
 use Modules\Crud\Http\Requests\CRUDRequest;
 use Illuminate\Database\Eloquent\Model;
+use Netcore\Translator\Helpers\TransHelper;
 
 trait CRUDController
 {
@@ -38,10 +39,36 @@ trait CRUDController
         session()->put('crud-active-model', get_class($this->getModel()));
         session()->put('crud-route-name', request()->route()->getName());
 
+        $columns = [];
+
+        //return dd($this->getModel()->getDatatableColumns());
+
+        foreach ($this->getModel()->getDatatableColumns() as $field => $name) {
+            if ($field === 'translations') {
+                foreach ($name as $key => $translatableField) {
+                    $columns[] = (object)[
+                        'title'      => is_array($translatableField) ? array_get($translatableField, 'title', 'Unknown column') : $translatableField,
+                        'data'       => is_array($translatableField) ? array_get($translatableField, 'data', $key) : $key,
+                        'name'       => is_array($translatableField) ? array_get($translatableField, 'name', $key) : $key,
+                        'orderable'  => false,
+                        'searchable' => false,
+                    ];
+                }
+            } else {
+                $columns[] = (object)[
+                    'title'      => is_array($name) ? array_get($name, 'title', 'Unknown column') : $name,
+                    'data'       => is_array($name) ? array_get($name, 'data', $field) : $field,
+                    'name'       => is_array($name) ? array_get($name, 'name', $field) : $field,
+                    'orderable'  => is_array($name) ? (array_get($name, 'orderable', true) ? true : false) : true,
+                    'searchable' => is_array($name) ? (array_get($name, 'searchable', true) ? true : false) : true
+                ];
+            }
+        }
+
         return $this->view('crud::index', [
-            'model'     => $this->getModel(),
-            'config'    => $this->getConfig(),
-            'datatable' => $this->getModel()->getDatatableColumns(),
+            'model'   => $this->getModel(),
+            'config'  => $this->getConfig(),
+            'columns' => collect($columns),
         ]);
     }
 
@@ -53,7 +80,8 @@ trait CRUDController
     public function create()
     {
         return $this->view('crud::create', [
-            'model' => $this->getModel(),
+            'model'     => $this->getModel(),
+            'languages' => languages()
         ]);
     }
 
@@ -66,9 +94,20 @@ trait CRUDController
      */
     public function store(CRUDRequest $request)
     {
-        $this->getModel()->create($request->all());
+        $model = $this->getModel();
 
-        return back()->withSuccess($this->getModel()->getClassName() . ' created successfully.');
+        $isoCodes = [];
+        if (property_exists($model, 'translationModel')) {
+            $isoCodes = languages()->pluck('iso_code')->toArray();
+        }
+
+        $model = $model->create(array_except($request->all(), $isoCodes));
+
+        if (property_exists($model, 'translationModel')) {
+            $model->updateTranslations(array_only($request->all(), $isoCodes));
+        }
+
+        return back()->withSuccess($model->getClassName() . ' created successfully.');
     }
 
     /**
@@ -80,7 +119,8 @@ trait CRUDController
     public function show($value)
     {
         return $this->view('crud::show', [
-            'model' => $this->getModel()->findOrFail($value),
+            'model' => $this->getModel()->findOrFail($value)->hideFields(['password']),
+            'languages' => languages()
         ]);
     }
 
@@ -93,8 +133,9 @@ trait CRUDController
     public function edit($value)
     {
         return $this->view('crud::edit', [
-            'model'  => $this->getModel()->findOrFail($value),
-            'config' => $this->getConfig(),
+            'model'     => $this->getModel()->findOrFail($value),
+            'languages' => languages(),
+            'config'    => $this->getConfig(),
         ]);
     }
 
@@ -108,7 +149,17 @@ trait CRUDController
     public function update(CRUDRequest $request, $value)
     {
         $model = $this->getModel()->findOrFail($value);
-        $model->update($request->all());
+
+        $isoCodes = [];
+        if (property_exists($model, 'translationModel')) {
+            $isoCodes = languages()->pluck('iso_code')->toArray();
+        }
+
+        $model->update(array_except($request->all(), $isoCodes));
+
+        if (property_exists($model, 'translationModel')) {
+            $model->updateTranslations(array_only($request->all(), $isoCodes));
+        }
 
         return back()->withSuccess($this->getModel()->getClassName() . ' saved successfully.');
     }
@@ -161,5 +212,14 @@ trait CRUDController
                 $sheet->fromModel($model);
             });
         })->export($type);
+    }
+
+    /**
+     * A simple check, used in Unit test
+     *
+     * @return bool
+     */
+    public function isCrud(){
+        return true;
     }
 }

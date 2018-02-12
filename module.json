@@ -6,7 +6,8 @@
     "active": 1,
     "order": 0,
     "providers": [
-        "Modules\\Crud\\Providers\\CrudServiceProvider"
+        "Modules\\Crud\\Providers\\CrudServiceProvider",
+        "Modules\\Crud\\Providers\\HelperServiceProvider"
     ],
     "aliases": {},
     "files": [
