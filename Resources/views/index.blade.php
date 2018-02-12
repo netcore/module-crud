@@ -5,14 +5,16 @@
 @section('crudPanelName', 'All results from resource')
 
 @section('crud')
+    <input id="columns" type="hidden" value="{{ $columns->toJSON() }}">
+
     <div class="table-primary">
         <table class="table table-bordered datatable">
             <thead>
                 <tr>
-                    @foreach($datatable as $field => $title)
-                        <th>{{ is_array($title) ? array_get($title, 'title', 'Unknown column') : $title }}</th>
+                    @foreach($columns as $column)
+                        <th>{{ $column->title }}</th>
                     @endforeach
-                    <th>Actions</th>
+                    <th style="min-width:200px">Actions</th>
                 </tr>
             </thead>
         </table>
@@ -21,23 +23,7 @@
 
 @section('scripts')
     <script>
-        var columns = [];
-
-        // Build columns dynamically
-        @foreach($datatable as $field => $name)
-            @php
-                // For some reason pagination is not working if we pass 1/0 instead of true/false..
-                $isOrderable = is_array($name) ? (array_get($name, 'orderable', true) ? 'true' : 'false') : 'true';
-                $isSearchable = is_array($name) ? (array_get($name, 'searchable', true) ? 'true' : 'false') : 'true';
-            @endphp
-
-            columns.push({
-                data: '{{ is_array($name) ? array_get($name, 'data', $field) : $field }}',
-                name: '{{ is_array($name) ? array_get($name, 'name', $field) : $field }}',
-                orderable: {{ $isOrderable }},
-                searchable: {{ $isSearchable }}
-            });
-        @endforeach
+        var columns = JSON.parse(jQuery('#columns').val());
 
         columns.push({
             data: 'actions',

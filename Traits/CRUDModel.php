@@ -4,6 +4,7 @@ namespace Modules\Crud\Traits;
 
 use Doctrine\DBAL\Types\StringType;
 use Illuminate\Support\Collection;
+use Netcore\Translator\Helpers\TransHelper;
 
 trait CRUDModel
 {
@@ -76,10 +77,30 @@ trait CRUDModel
     public function isAbleTo(string $action, bool $default = false): bool
     {
         if (isset($this->crudConfig['allow-' . $action])) {
-            return (bool) $this->crudConfig['allow-' . $action];
+            return (bool)$this->crudConfig['allow-' . $action];
         }
 
         return $default;
+    }
+
+    /**
+     * Check if crud model is translatable
+     *
+     * @return bool
+     */
+    public function isTranslatable()
+    {
+        return property_exists($this, 'translationModel');
+    }
+
+    /**
+     * Check if crud model can have attachments
+     *
+     * @return bool
+     */
+    public function hasAttachments()
+    {
+        return method_exists($this, 'getAttachedFiles');
     }
 
     /**
@@ -136,7 +157,17 @@ trait CRUDModel
      */
     public function getValidationRules($model): array
     {
-        return $this->buildValidation($this->readDatabaseSchema(), $model);
+        $schema = $this->readDatabaseSchema();
+
+        if ($this->isTranslatable()) {
+            $translationModel = app($this->translationModel);
+
+            foreach (languages() as $language) {
+                $schema[$language->iso_code] = $this->readDatabaseSchema($translationModel);
+            }
+        }
+
+        return $this->buildValidation($schema, $model);
     }
 
     /**
@@ -162,21 +193,65 @@ trait CRUDModel
             }
         }
 
+        if ($this->hasAttachments()) {
+            foreach ($this->getAttachedFiles() as $name => $file) {
+                $fields[$name] = 'file';
+            }
+        }
+
+        return $fields;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTranslatableFields(): array
+    {
+        if (!$this->isTranslatable()) {
+            return [];
+        }
+
+        $fields = [];
+
+        $translationModel = app($this->translationModel);
+
+        if (property_exists($this, 'translatedAttributes')) {
+            $languages = TransHelper::getAllLanguages();
+            foreach ($languages as $language) {
+                foreach ($this->readDatabaseSchema($translationModel) as $translatableField => $schema) {
+                    foreach ($this->translatedAttributes as $field) {
+                        if ($field == $translatableField) {
+                            $fields[$language->iso_code][$field] = $this->typeMap[$schema->getType()->getName()] ?? 'text';
+                        }
+                    }
+                }
+            }
+        }
+
         return $fields;
     }
 
     /**
      * Read the database schema and return fillable fields as Column instances.
      *
+     * @param null $model
      * @return Collection
      */
-    protected function readDatabaseSchema(): Collection
+    protected function readDatabaseSchema($model = null): Collection
     {
+        if (!$model) {
+            $model = $this;
+        }
+
         $schema = \DB::getDoctrineSchemaManager();
 
-        return collect($schema->listTableColumns($this->getTable()))
-            ->reject(function ($instance, $column) {
-                return $this->rejectColumn($column);
+        return collect($schema->listTableColumns($model->getTable()))
+            ->reject(function ($instance, $column) use ($model) {
+                if ($model === $this) {
+                    return $this->rejectColumn($column);
+                } else {
+                    return $this->rejectTranslatableColumn($column);
+                }
             });
     }
 
@@ -191,18 +266,43 @@ trait CRUDModel
     {
         $rules = [];
 
+        //return dd($columns);
+
         foreach ($columns as $column => $columnInstance) {
-            $rules[$column] = [];
+            if ($columnInstance instanceof Collection) {
+                foreach ($columnInstance as $translatableColumn => $translatableInstance) {
+                    $rules[$column . '.' . $translatableColumn] = [];
 
-            $rules[$column][] = $columnInstance->getNotnull() ? 'required' : 'nullable';
+                    $rules[$column . '.' . $translatableColumn][] = $translatableInstance->getNotnull() ? 'required' : 'nullable';
 
-            if ($columnInstance->getType() instanceof StringType) {
-                $rules[$column][] = 'max:' . $columnInstance->getLength();
+                    if ($translatableInstance->getType() instanceof StringType) {
+                        $rules[$column . '.' . $translatableColumn][] = 'max:' . $translatableInstance->getLength();
+                    }
+
+                    // Magic field additional validation rules
+                    if (in_array($translatableColumn, $this->getMagicFields())) {
+                        $rules[$column . '.' . $translatableColumn] = $this->getMagicFieldValidation($translatableColumn);
+                    }
+                }
+            } else {
+                $rules[$column] = [];
+
+                $rules[$column][] = $columnInstance->getNotnull() ? 'required' : 'nullable';
+
+                if ($columnInstance->getType() instanceof StringType) {
+                    $rules[$column][] = 'max:' . $columnInstance->getLength();
+                }
+
+                // Magic field additional validation rules
+                if (in_array($column, $this->getMagicFields())) {
+                    $rules[$column] = $this->getMagicFieldValidation($column);
+                }
             }
+        }
 
-            // Magic field additional validation rules
-            if (in_array($column, $this->getMagicFields())) {
-                $rules[$column] = $this->getMagicFieldValidation($column);
+        if ($this->hasAttachments()) {
+            foreach ($this->getAttachedFiles() as $name => $file) {
+                $rules[$name] = 'required|max:' . (convertPHPSizeToBytes(getMaximumFileUploadSize()) / 1024) . '|file';
             }
         }
 
@@ -316,6 +416,15 @@ trait CRUDModel
     }
 
     /**
+     * @param $column
+     * @return bool
+     */
+    protected function rejectTranslatableColumn($column): bool
+    {
+        return !in_array($column, $this->translatedAttributes);
+    }
+
+    /**
      * Get the presenter class for datatable.
      *
      * @return string
@@ -342,8 +451,24 @@ trait CRUDModel
             return app($presenter)->getDatatableColumns();
         }
 
+        if ($this->isTranslatable()) {
+            foreach ($this->translatedAttributes as $field) {
+                $columns['translations'][$field] = title_case(str_replace('_', ' ', $field));
+            }
+        }
+
+        $fileFields = [];
+
+        if ($this->hasAttachments()) {
+            foreach ($this->getAttachedFiles() as $name => $file) {
+                $fileFields[] = $name;
+
+                $columns[$name . '_file_name'] = title_case(str_replace('_', ' ', $name));
+            }
+        }
+
         // CRUD module fallback if presenter doesn't exist.
-        foreach ($this->hideFields(['password'])->getFields() as $field => $type) {
+        foreach (array_except($this->hideFields(['password'])->getFields(), $fileFields) as $field => $type) {
             if ($type !== 'textarea') {
                 $columns[$field] = title_case(str_replace('_', ' ', $field));
             }

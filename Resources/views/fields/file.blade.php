@@ -1,0 +1,1 @@
+{{ Form::file($field, $attributes) }}
