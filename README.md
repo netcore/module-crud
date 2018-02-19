@@ -166,3 +166,74 @@ class Article extends Model
 ```
 
 That's it! Datatable now will use columns/config from presenter.
+
+## Translatable fields
+
+This module can also save translatable fields. 
+
+First install [module-translate](https://github.com/netcore/module-translate)
+
+Then you need to create a translatable model, with Translatable and SyncTranslations traits. After that, just add **$translationModel** and **$translatedAttributes** and the CRUD module will take care of the rest.
+
+```php
+class FoodType extends Model
+{
+    use Translatable, SyncTranslations, CRUDModel;
+
+    protected $fillable = [
+        'example_1',
+        'example_2',
+        'example_3',
+        'example_4',
+    ];
+
+    /**
+     * @var string
+     */
+    public $translationModel = FoodTypeTranslation::class;
+
+    /**
+     * @var array
+     */
+    public $translatedAttributes = [
+        'name',
+    ];
+
+    /**
+     * @var array
+     */
+    protected $with = ['translations'];
+}
+```
+
+## Files
+
+If you want to add files to the CRUD model, you need to implement **StaplerableInterface** and add **EloquentTrait**
+
+After that, add the file field with **$this->hasAttachedFile()** and you're good to go
+
+```php
+class TestFiles extends Model implements StaplerableInterface
+{
+    use CRUDModel, EloquentTrait;
+
+    /**
+     * @var array
+     */
+    protected $fillable = ['image'];
+
+    /**
+     * TestFiles constructor.
+     * @param array $attributes
+     */
+    public function __construct(array $attributes = array())
+    {
+        $this->hasAttachedFile('image', [
+            'url'    => '/uploads/portfolio/:id_partition/:filename',
+        ]);
+
+        parent::__construct($attributes);
+    }
+
+}
+```
