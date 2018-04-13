@@ -6,6 +6,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Modules\Crud\Http\Requests\CRUDRequest;
 use Illuminate\Database\Eloquent\Model;
 use Netcore\Translator\Helpers\TransHelper;
+use Netcore\Translator\Models\Language;
 
 trait CRUDController
 {
@@ -81,7 +82,7 @@ trait CRUDController
     {
         return $this->view('crud::create', [
             'model'     => $this->getModel(),
-            'languages' => languages()
+            'languages' => Language::get(),
         ]);
     }
 
@@ -120,7 +121,7 @@ trait CRUDController
     {
         return $this->view('crud::show', [
             'model' => $this->getModel()->findOrFail($value)->hideFields(['password']),
-            'languages' => languages()
+            'languages' => Language::get(),
         ]);
     }
 
@@ -134,7 +135,7 @@ trait CRUDController
     {
         return $this->view('crud::edit', [
             'model'     => $this->getModel()->findOrFail($value),
-            'languages' => languages(),
+            'languages' => Language::get(),
             'config'    => $this->getConfig(),
         ]);
     }
@@ -149,10 +150,10 @@ trait CRUDController
     public function update(CRUDRequest $request, $value)
     {
         $model = $this->getModel()->findOrFail($value);
-
+        $languages = Language::get();
         $isoCodes = [];
         if (property_exists($model, 'translationModel')) {
-            $isoCodes = languages()->pluck('iso_code')->toArray();
+            $isoCodes = $languages->pluck('iso_code')->toArray();
         }
 
         $model->update(array_except($request->all(), $isoCodes));
