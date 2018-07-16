@@ -30,7 +30,8 @@
             name: 'actions',
             orderable: false,
             searchable: false,
-            className: 'text-right vertical-align-middle'
+            className: 'text-right vertical-align-middle',
+            order: [[0, 'desc']]
         });
 
         (function () {
