@@ -30,8 +30,7 @@
             name: 'actions',
             orderable: false,
             searchable: false,
-            className: 'text-right vertical-align-middle',
-            order: [[0, 'desc']]
+            className: 'text-right vertical-align-middle'
         });
 
         (function () {
@@ -40,7 +39,8 @@
                 serverSide: true,
                 ajax: '{{ route('crud::paginate') }}',
                 responsive: true,
-                columns: columns
+                columns: columns,
+                order: [[0, 'desc']]
             });
 
             $('.dataTables_wrapper .dataTables_filter input').attr('placeholder', 'Search...');
