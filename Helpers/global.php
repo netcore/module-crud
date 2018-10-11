@@ -30,7 +30,7 @@ if (!function_exists('extension_image')) {
     function extension_image($path, $size = 'md')
     {
         $ignore = [
-            'jpg', 'jpeg', 'png', 'bmp', 'gif'
+            'jpg', 'jpeg', 'png', 'bmp', 'gif', 'svg'
         ];
 
         $sizes = [
