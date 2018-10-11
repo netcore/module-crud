@@ -266,8 +266,6 @@ trait CRUDModel
     {
         $rules = [];
 
-        //return dd($columns);
-
         foreach ($columns as $column => $columnInstance) {
             if ($columnInstance instanceof Collection) {
                 foreach ($columnInstance as $translatableColumn => $translatableInstance) {
@@ -301,8 +299,11 @@ trait CRUDModel
         }
 
         if ($this->hasAttachments()) {
+            $edit = request()->route()->{str_singular($this->getTable())};
+            $required = !$edit ? 'required|' : '';
+
             foreach ($this->getAttachedFiles() as $name => $file) {
-                $rules[$name] = 'required|max:' . (convertPHPSizeToBytes(getMaximumFileUploadSize()) / 1024) . '|file';
+                $rules[$name] = $required . 'max:' . (convertPHPSizeToBytes(getMaximumFileUploadSize()) / 1024) . '|file';
             }
         }
 
